@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: bibliotheque_postgres
+    environment:
+      POSTGRES_DB: bibliotheque_universitaire
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+    ports:
+      - "5432:5432"
+    volumes:
+      # Scripts d'initialisation (exécutés dans l'ordre alphabétique)
+      - ./init:/docker-entrypoint-initdb.d/
+      # Données persistantes
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d bibliotheque_universitaire"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Interface d'administration (optionnel)
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: bibliotheque_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@bibliotheque.fr
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "8081:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  pgadmin_data: 
